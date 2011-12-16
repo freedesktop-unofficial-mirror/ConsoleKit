@@ -79,6 +79,8 @@ event_seat_session_added_free (CkLogSeatSessionAddedEvent *event)
         event->session_id = NULL;
         g_free (event->session_type);
         event->session_type = NULL;
+        g_free (event->display_type);
+        event->display_type = NULL;
         g_free (event->session_x11_display);
         event->session_x11_display = NULL;
         g_free (event->session_x11_display_device);
@@ -103,6 +105,8 @@ event_seat_session_removed_free (CkLogSeatSessionRemovedEvent *event)
         event->session_id = NULL;
         g_free (event->session_type);
         event->session_type = NULL;
+        g_free (event->display_type);
+        event->display_type = NULL;
         g_free (event->session_x11_display);
         event->session_x11_display = NULL;
         g_free (event->session_x11_display_device);
@@ -213,6 +217,7 @@ event_seat_session_added_copy (CkLogSeatSessionAddedEvent *event,
         event_copy->seat_id = g_strdup (event->seat_id);
         event_copy->session_id = g_strdup (event->session_id);
         event_copy->session_type = g_strdup (event->session_type);
+        event_copy->display_type = g_strdup (event->display_type);
         event_copy->session_x11_display = g_strdup (event->session_x11_display);
         event_copy->session_x11_display_device = g_strdup (event->session_x11_display_device);
         event_copy->session_display_device = g_strdup (event->session_display_device);
@@ -232,6 +237,7 @@ event_seat_session_removed_copy (CkLogSeatSessionRemovedEvent *event,
         event_copy->seat_id = g_strdup (event->seat_id);
         event_copy->session_id = g_strdup (event->session_id);
         event_copy->session_type = g_strdup (event->session_type);
+        event_copy->display_type = g_strdup (event->display_type);
         event_copy->session_x11_display = g_strdup (event->session_x11_display);
         event_copy->session_x11_display_device = g_strdup (event->session_x11_display_device);
         event_copy->session_display_device = g_strdup (event->session_display_device);
@@ -415,10 +421,11 @@ add_log_for_seat_session_added (GString    *str,
 
         e = (CkLogSeatSessionAddedEvent *)event;
         g_string_append_printf (str,
-                                "seat-id='%s' session-id='%s' session-type='%s' session-x11-display='%s' session-x11-display-device='%s' session-display-device='%s' session-remote-host-name='%s' session-is-local=%s session-unix-user=%u session-creation-time='%s'",
+                                "seat-id='%s' session-id='%s' session-type='%s' display-type='%s' session-x11-display='%s' session-x11-display-device='%s' session-display-device='%s' session-remote-host-name='%s' session-is-local=%s session-unix-user=%u session-creation-time='%s'",
                                 e->seat_id ? e->seat_id : "",
                                 e->session_id ? e->session_id : "",
                                 e->session_type ? e->session_type : "",
+                                e->display_type ? e->display_type : "",
                                 e->session_x11_display ? e->session_x11_display : "",
                                 e->session_x11_display_device ? e->session_x11_display_device : "",
                                 e->session_display_device ? e->session_display_device : "",
@@ -436,10 +443,11 @@ add_log_for_seat_session_removed (GString    *str,
 
         e = (CkLogSeatSessionRemovedEvent *)event;
         g_string_append_printf (str,
-                                "seat-id='%s' session-id='%s' session-type='%s' session-x11-display='%s' session-x11-display-device='%s' session-display-device='%s' session-remote-host-name='%s' session-is-local=%s session-unix-user=%u session-creation-time='%s'",
+                                "seat-id='%s' session-id='%s' session-type='%s' display-type='%s' session-x11-display='%s' session-x11-display-device='%s' session-display-device='%s' session-remote-host-name='%s' session-is-local=%s session-unix-user=%u session-creation-time='%s'",
                                 e->seat_id ? e->seat_id : "",
                                 e->session_id ? e->session_id : "",
                                 e->session_type ? e->session_type : "",
+                                e->display_type ? e->display_type : "",
                                 e->session_x11_display ? e->session_x11_display : "",
                                 e->session_x11_display_device ? e->session_x11_display_device : "",
                                 e->session_display_device ? e->session_display_device : "",
@@ -939,7 +947,7 @@ parse_log_for_seat_session_added (const GString *str,
         }
 
         error = NULL;
-        re = g_regex_new ("seat-id='(?P<seatid>[a-zA-Z0-9/]+)' session-id='(?P<sessionid>[a-zA-Z0-9/]+)' session-type='(?P<sessiontype>[a-zA-Z0-9 ]*)' session-x11-display='(?P<sessionx11display>[0-9a-zA-Z.:]*)' session-x11-display-device='(?P<sessionx11displaydevice>[^']*)' session-display-device='(?P<sessiondisplaydevice>[^']*)' session-remote-host-name='(?P<sessionremovehostname>[^']*)' session-is-local=(?P<sessionislocal>[a-zA-Z]*) session-unix-user=(?P<sessionunixuser>[0-9]*) session-creation-time='(?P<sessioncreationtime>[^']*)'", 0, 0, &error);
+        re = g_regex_new ("seat-id='(?P<seatid>[a-zA-Z0-9/]+)' session-id='(?P<sessionid>[a-zA-Z0-9/]+)' session-type='(?P<sessiontype>[a-zA-Z0-9 ]*)' display-type='(?P<displaytype>[a-zA-Z0-9 ]*)' session-x11-display='(?P<sessionx11display>[0-9a-zA-Z.:]*)' session-x11-display-device='(?P<sessionx11displaydevice>[^']*)' session-display-device='(?P<sessiondisplaydevice>[^']*)' session-remote-host-name='(?P<sessionremovehostname>[^']*)' session-is-local=(?P<sessionislocal>[a-zA-Z]*) session-unix-user=(?P<sessionunixuser>[0-9]*) session-creation-time='(?P<sessioncreationtime>[^']*)'", 0, 0, &error);
         if (re == NULL) {
                 g_warning ("%s", error->message);
                 goto out;
@@ -957,6 +965,7 @@ parse_log_for_seat_session_added (const GString *str,
         e->seat_id = g_match_info_fetch_named (match_info, "seatid");
         e->session_id = g_match_info_fetch_named (match_info, "sessionid");
         e->session_type = g_match_info_fetch_named (match_info, "sessiontype");
+        e->display_type = g_match_info_fetch_named (match_info, "displaytype");
         e->session_x11_display = g_match_info_fetch_named (match_info, "sessionx11display");
         e->session_x11_display_device = g_match_info_fetch_named (match_info, "sessionx11displaydevice");
         e->session_display_device = g_match_info_fetch_named (match_info, "sessiondisplaydevice");
@@ -1014,7 +1023,7 @@ parse_log_for_seat_session_removed (const GString *str,
         }
 
         error = NULL;
-        re = g_regex_new ("seat-id='(?P<seatid>[a-zA-Z0-9/]+)' session-id='(?P<sessionid>[a-zA-Z0-9/]+)' session-type='(?P<sessiontype>[a-zA-Z0-9 ]*)' session-x11-display='(?P<sessionx11display>[0-9a-zA-Z.:]*)' session-x11-display-device='(?P<sessionx11displaydevice>[^']*)' session-display-device='(?P<sessiondisplaydevice>[^']*)' session-remote-host-name='(?P<sessionremovehostname>[^']*)' session-is-local=(?P<sessionislocal>[a-zA-Z]*) session-unix-user=(?P<sessionunixuser>[0-9]*) session-creation-time='(?P<sessioncreationtime>[^']*)'", 0, 0, &error);
+        re = g_regex_new ("seat-id='(?P<seatid>[a-zA-Z0-9/]+)' session-id='(?P<sessionid>[a-zA-Z0-9/]+)' session-type='(?P<sessiontype>[a-zA-Z0-9 ]*)' display-type='(?P<displaytype>[a-zA-Z0-9 ]*)' session-x11-display='(?P<sessionx11display>[0-9a-zA-Z.:]*)' session-x11-display-device='(?P<sessionx11displaydevice>[^']*)' session-display-device='(?P<sessiondisplaydevice>[^']*)' session-remote-host-name='(?P<sessionremovehostname>[^']*)' session-is-local=(?P<sessionislocal>[a-zA-Z]*) session-unix-user=(?P<sessionunixuser>[0-9]*) session-creation-time='(?P<sessioncreationtime>[^']*)'", 0, 0, &error);
         if (re == NULL) {
                 g_warning ("%s", error->message);
                 goto out;
@@ -1032,6 +1041,7 @@ parse_log_for_seat_session_removed (const GString *str,
         e->seat_id = g_match_info_fetch_named (match_info, "seatid");
         e->session_id = g_match_info_fetch_named (match_info, "sessionid");
         e->session_type = g_match_info_fetch_named (match_info, "sessiontype");
+        e->display_type = g_match_info_fetch_named (match_info, "displaytype");
         e->session_x11_display = g_match_info_fetch_named (match_info, "sessionx11display");
         e->session_x11_display_device = g_match_info_fetch_named (match_info, "sessionx11displaydevice");
         e->session_display_device = g_match_info_fetch_named (match_info, "sessiondisplaydevice");

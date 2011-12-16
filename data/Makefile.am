@@ -1,5 +1,10 @@
 NULL =
 
+SUBDIRS = \
+	displays.d	\
+	sessions.d	\
+        $(NULL)
+
 dbusconfdir = $(DBUS_SYS_DIR)
 dbusconf_DATA = ConsoleKit.conf
 
